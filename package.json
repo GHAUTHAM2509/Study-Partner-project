@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "file-loader": "^6.2.0",
+    "react-file-viewer": "^1.2.1"
+  }
+}

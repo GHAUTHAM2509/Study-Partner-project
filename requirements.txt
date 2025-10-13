@@ -1,0 +1,10 @@
+sentence-transformers
+yake
+spacy
+pytextrank
+python-dotenv
+chromadb
+google-generativeai
+Flask
+Flask-Cors
+watchdog
