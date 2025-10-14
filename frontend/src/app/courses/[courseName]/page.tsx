@@ -77,7 +77,7 @@ export default function CoursePage() {
         </div>
       </main>
       <div className="flex justify-center items-center mt-16">
-        <Link href="/chat">
+        <Link href={`/chat/${courseName}`}>
           <button className="bg-[#ffffff] hover:bg-[#D9D9D9] text-2xl text-[#23272D] font-bold py-4 px-8 rounded-lg transition-colors font-open-sans">
             Try Student-Partner AI
           </button>

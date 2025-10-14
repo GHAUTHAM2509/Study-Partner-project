@@ -5,6 +5,7 @@ import os
 from dotenv import load_dotenv
 import redis
 from  utils.api_key_manager import get_next_api_key
+import re
 
 # --- 1. SETUP ---
 # This section initializes the necessary components.
@@ -32,17 +33,29 @@ print("Connecting to vector database...")
 # Connect to the persistent database stored in the 'Database/db' directory
 db_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'Database', 'db'))
 client = chromadb.PersistentClient(path=db_path)
-collection = client.get_collection(name="operating_systems")  # Change this to your collection name
 
 # --- 2. THE RAG LOOP ---
 # This function encapsulates the entire Retrieval-Augmented Generation process.
 
-def answer_question(user_question):
+def answer_question(user_question, course_name):
     """
     Takes a user's question, retrieves relevant context from the database,
     and generates a synthesized answer using an LLM.
     """
-    print(f"\nProcessing question: '{user_question}'")
+    print(f"\nProcessing question: '{user_question}' for course: '{course_name}'")
+
+    # Map course_name to collection_name
+    course_to_collection_map = {
+        "database-systems": "database",
+        "operating-systems": "operating_systems",
+        "cloud-computing": "aws"
+    }
+    collection_name = course_to_collection_map.get(course_name)
+
+    if not collection_name:
+        return f"Error: No collection found for course '{course_name}'."
+
+    collection = client.get_collection(name=collection_name)
 
     # Step 1: Embed the user's question[cite: 51].
     # The question is converted into a vector using the same model as the documents.
@@ -65,43 +78,54 @@ def answer_question(user_question):
 
     # Step 3: Construct a comprehensive prompt for the LLM[cite: 241].
     # This prompt includes instructions, the retrieved context, and the user's question.
-    # This structure forces the LLM to use only the provided context, preventing hallucinations[cite: 249].
+    # This structure forces the LLM to use only the provided context, preventing hallucinations.
     prompt_template = """
-    You are an expert academic assistant. Using ONLY the provided context from the user's personal notes, answer the user's question accurately and concisely. [cite: 243]
-    Do not use any external knowledge. If the context does not contain the answer, state that the information is not available in the notes. [cite: 244]
+    You are a meticulous and insightful AI research assistant. Your primary function is to help me understand and analyze my personal notes.
+
+    Your answers MUST be based exclusively on the provided CONTEXT. Do not use any external knowledge or make assumptions beyond what is written in the notes.
+
+    Follow these rules strictly:
+    1.  **Synthesize, Don't Just Find:** Do not just copy-paste snippets. Synthesize the relevant information from the context into a coherent and comprehensive answer.
+    2.  **Be Honest About Gaps:** If the context does not contain the answer, state clearly: "Based on your notes, the information to answer this question isn't available." If the context is related but doesn't provide a direct answer, explain what information is available and how it relates to the question. Do not apologize.
+    3.  **Format for Clarity:** Use markdown formatting like bolding for key terms and bullet points for lists to make your answers easy to read.
+    4.  **Stay Concise:** Provide a direct and complete answer without unnecessary conversational filler.
 
     CONTEXT:
+    ---
     {context}
+    ---
 
-    USER QUESTION:
-    {question}
+    USER QUESTION: {question}
 
-    ANSWER:
-    """ 
+    ASSISTANT'S ANSWER:
+    """
 
     final_prompt = prompt_template.format(context=context_string, question=user_question)
 
-    # Step 4: Send the prompt to the LLM to generate the final answer[cite: 53].
-    # The LLM synthesizes a coherent answer based *only* on the augmented context[cite: 54].
+    # Step 4: Send the prompt to the LLM to generate the final answer.
+    # The LLM synthesizes a coherent answer based *only* on the augmented context.
     print("Generating final answer with Gemini...")
     try:
         # Using 'gemini-2.0-flash' which is a more stable and specific model identifier.
-        model = genai.GenerativeModel('gemini-1.5-flash-latest')
+        model = genai.GenerativeModel('gemini-2.0-flash')
         response = model.generate_content(final_prompt)
         generated_answer = response.text
     except Exception as e:
         return f"An error occurred with the Gemini API: {e}"
 
+    # Clean the generated answer to remove any stray citation markers.
+    cleaned_answer = re.sub(r'\[cite: \d+\]', '', generated_answer).strip()
 
-    # Step 5: Append citations from the retrieved metadata[cite: 261].
-    # This makes the answer verifiable and transforms the tool into a genuine research assistant[cite: 262].
+
+    # Step 5: Append citations from the retrieved metadata.
+    # This makes the answer verifiable and transforms the tool into a genuine research assistant.
     citations = set()
     for metadata in retrieved_metadatas:
         source = metadata.get('source', 'Unknown Source')
         page = metadata.get('page', 'N/A')
         citations.add(f"(Source: {source}, Page: {page})")
     
-    final_answer_with_citations = f"{generated_answer}\n\nSources:\n" + "\n".join(sorted(list(citations)))
+    final_answer_with_citations = f"{cleaned_answer}\n\nSources:\n" + "\n".join(sorted(list(citations)))
 
     return final_answer_with_citations
 

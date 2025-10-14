@@ -69,12 +69,13 @@ def get_file(course_name, file_name):
 def get_answer():
     data = request.get_json()
     question = data.get('question')
+    course_name = data.get('courseName')
 
-    if not question:
-        return jsonify({'error': 'Question is required'}), 400
+    if not question or not course_name:
+        return jsonify({'error': 'Question and courseName are required'}), 400
 
     try:
-        answer = answer_question(question)
+        answer = answer_question(question, course_name)
         return jsonify({'answer': answer})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
