@@ -2,7 +2,8 @@ from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 import sys
 import os
-
+import urllib.parse
+from Scrapper.scaper_papers import scrape_website, extract_paper_info
 # Add project root to Python path to resolve module imports
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__)))
 sys.path.insert(0, project_root)
@@ -79,7 +80,22 @@ def get_answer():
         return jsonify({'answer': answer})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-
+    
+@app.route('/api/papers/<course_name>',)
+def list_papers(course_name):
+    course_dir_map = {
+        "database-systems": "database",
+        "operating-systems": "Operating Systems",
+        "cloud-computing": "aws"
+    }
+    subject = course_dir_map.get(course_name)
+    if not subject:
+        return jsonify({"error": "Course not found for papers"}), 404
+        
+    url = f"https://papers.codechefvit.com/catalogue?subject={urllib.parse.quote(subject)}"
+    soup = scrape_website(url)
+    papers = extract_paper_info(soup)
+    return jsonify({'papers':papers})
 @app.route('/')
 def index():
     return jsonify({"message": "Study Partner backend is running!"})

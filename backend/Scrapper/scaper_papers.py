@@ -96,6 +96,6 @@ def extract_paper_info(soup):
 url = "https://papers.codechefvit.com/catalogue?subject=operating%20systems"
 soup = scrape_website(url)
 papers = extract_paper_info(soup)
-print(papers)
+#print(papers)
 # Pretty print the extracted data
-print(json.dumps(papers, indent=2))
+#print(json.dumps(papers, indent=2))
