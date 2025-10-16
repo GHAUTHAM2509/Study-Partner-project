@@ -5,6 +5,8 @@ import { useParams, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 
+import { marked } from 'marked';
+
 interface PaperQuestion {
   questions: string[];
 }
@@ -131,7 +133,7 @@ export default function ChatPage() {
                   }
                 >
                   {chat.role === 'bot'
-                    ? chat.content
+                    ? <div dangerouslySetInnerHTML={{ __html: marked.parse(chat.content) }} />
                     : chat.content
                   }
                 </div>
