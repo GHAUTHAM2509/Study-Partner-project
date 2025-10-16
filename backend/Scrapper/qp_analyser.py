@@ -73,6 +73,40 @@ def process_pdf_with_docai(pdf_content: bytes, mime_type: str = "application/pdf
         logging.error(f"An unexpected error occurred: {e}")
         return None
 
+def retrieve_questions_from_paper(paper_link: str):
+    """
+    Retrieves questions from a given paper using Document AI.
+
+    Args:
+        paper_link: The URL of the paper to analyze.
+
+    Returns:
+        list: A list of questions extracted from the paper.
+    """
+    try:
+        logging.info(f"Retrieving questions from paper: {paper_link}")
+        # Download the PDF content from the paper link
+        pdf_response = requests.get(paper_link)
+        pdf_response.raise_for_status()
+        pdf_bytes = pdf_response.content
+
+        # Process the PDF using Document AI
+        result = process_pdf_with_docai(pdf_bytes)
+
+        if result:
+            questions = []
+            for entity in result.get('document', {}).get('entities', []):
+                questions.append(entity.get('mentionText', ''))
+            return questions
+        else:
+            logging.error("Failed to get result from Document AI.")
+            return []
+
+    except requests.exceptions.RequestException as e:
+        logging.error(f"Failed to download PDF: {e}")
+    except Exception as e:
+        logging.error(f"An error occurred during the main execution: {e}")
+
 # --- Example Usage ---
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')

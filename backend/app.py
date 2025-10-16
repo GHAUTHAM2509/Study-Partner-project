@@ -3,7 +3,9 @@ from flask_cors import CORS
 import sys
 import os
 import urllib.parse
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
 from Scrapper.scaper_papers import scrape_website, extract_paper_info
+from Scrapper.qp_analyser import process_pdf_with_docai, retrieve_questions_from_paper
 # Add project root to Python path to resolve module imports
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__)))
 sys.path.insert(0, project_root)
@@ -96,6 +98,14 @@ def list_papers(course_name):
     soup = scrape_website(url)
     papers = extract_paper_info(soup)
     return jsonify({'papers':papers})
+
+@app.route('/api/papers/<course_name>/<id>')
+def questions_from_papers(course_name, id):
+    base_url = "https://storage.googleapis.com/papers-codechefvit-prod/papers/"
+    paper_link = base_url + id
+    questions = retrieve_questions_from_paper(paper_link)
+    return jsonify({'questions': questions})
+
 @app.route('/')
 def index():
     return jsonify({"message": "Study Partner backend is running!"})

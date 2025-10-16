@@ -75,7 +75,12 @@ export default function CoursePage() {
       .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
       .join(' ');
   };
-
+  // SVG Icon for AI (Sparkles)
+  const AskaiIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+    </svg>
+  );
   // SVG Icon for View
   const ViewIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -114,22 +119,22 @@ export default function CoursePage() {
             Papers
           </button>
         </div>
-        <div className="border border-gray-600 rounded-lg p-4 h-96 overflow-y-auto">
+        <div className="border border-gray-400 rounded-lg p-4 h-96 overflow-y-auto">
           {loading ? (
             <div className="flex justify-center items-center h-full"><p>Loading...</p></div>
           ) : activeTab === 'files' ? (
             <div className="flex flex-col gap-2">
               {files.length > 0 ? files.map((file) => (
-                <div key={file.name} className="bg-[#2C3138] rounded-lg p-4 flex items-center justify-between hover:bg-[#40444A] transition-colors">
+                <div key={file.name} className="bg-[#23272D] rounded-lg p-4 flex items-center justify-between hover:bg-[#40444A] transition-colors">
                   <div className="flex items-center">
                     <Image src={getFileIcon(file.type)} alt={`${file.type} icon`} width={40} height={40} />
                     <span className="ml-4">{file.name}</span>
                   </div>
                   <div className="flex gap-2">
-                    <a href={`http://localhost:8000/api/files/${courseName}/${file.name}`} target="_blank" rel="noopener noreferrer" className="flex items-center bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-3 rounded transition-colors text-sm">
+                    <a href={`http://localhost:8000/api/files/${courseName}/${file.name}`} target="_blank" rel="noopener noreferrer" className="flex items-center text-white font-bold py-2 px-3 rounded transition-colors text-sm">
                       <ViewIcon /> View
                     </a>
-                    <a href={`http://localhost:8000/api/files/${courseName}/${file.name}`} download className="flex items-center bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-3 rounded transition-colors text-sm">
+                    <a href={`http://localhost:8000/api/files/${courseName}/${file.name}`} download className="flex items-center text-white font-bold py-2 px-3 rounded transition-colors text-sm">
                       <DownloadIcon /> Download
                     </a>
                   </div>
@@ -139,7 +144,7 @@ export default function CoursePage() {
           ) : (
             <div className="flex flex-col gap-3">
               {papers.length > 0 ? papers.map((paper) => (
-                <div key={paper.link} className="bg-[#2C3138] rounded-lg p-4 flex flex-col sm:flex-row justify-between hover:bg-[#40444A] transition-colors">
+                <div key={paper.link} className="bg-[#23272D] rounded-lg p-4 flex flex-col sm:flex-row justify-between hover:bg-[#2C3138] transition-colors">
                   <div className="flex-grow mb-3 sm:mb-0">
                     <h3 className="font-semibold text-lg">{paper.title} <span className="text-sm text-gray-400 font-mono">({paper.course_code})</span></h3>
                     <div className="flex flex-wrap gap-2 mt-2">
@@ -148,11 +153,14 @@ export default function CoursePage() {
                       ))}
                     </div>
                   </div>
-                  <div className="flex gap-2 items-center flex-shrink-0">
-                    <a href={paper.link} target="_blank" rel="noopener noreferrer" className="flex items-center bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-3 rounded transition-colors text-sm">
+                                    <div className="flex gap-2 items-center flex-shrink-0">
+                    <Link href={`/chat/${courseName}?paperId=${paper.pdf_link.split('/').pop()}`} className="flex items-center bg-[#23272D] text-white font-bold py-2 px-3 rounded transition-colors text-sm">
+                      <AskaiIcon /> Ask AI
+                    </Link>
+                    <a href={paper.link} target="_blank" rel="noopener noreferrer" className="flex items-center bg-[#23272D] text-white font-bold py-2 px-3 rounded transition-colors text-sm">
                       <ViewIcon /> View
                     </a>
-                    <a href={paper.pdf_link} download target="_blank" rel="noopener noreferrer" className="flex items-center bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-3 rounded transition-colors text-sm">
+                    <a href={paper.pdf_link} download target="_blank" rel="noopener noreferrer" className="flex items-center bg-[#23272D] text-white font-bold py-2 px-3 rounded transition-colors text-sm">
                       <DownloadIcon /> Download
                     </a>
                   </div>

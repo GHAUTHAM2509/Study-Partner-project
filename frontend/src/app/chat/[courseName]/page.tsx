@@ -1,142 +1,179 @@
 "use client";
 
-import { useState, useRef, useEffect } from 'react';
-import Image from 'next/image';
+import { useState, useEffect, useRef } from 'react';
+import { useParams, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
+import Image from 'next/image';
+import ReactMarkdown from 'react-markdown';
 
-interface Message {
-  text: string;
-  sender: 'user' | 'ai';
+interface PaperQuestion {
+  questions: string[];
 }
 
 export default function ChatPage() {
   const params = useParams();
+  const searchParams = useSearchParams();
   const courseName = params.courseName as string;
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [input, setInput] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const paperId = searchParams.get('paperId');
+
+  const [message, setMessage] = useState('');
+  const [chatHistory, setChatHistory] = useState<{ role: 'user' | 'bot'; content: string }[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [paperQuestions, setPaperQuestions] = useState<string[] | null>(null);
+  const [questionsLoading, setQuestionsLoading] = useState(true);
+
+  const chatContainerRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // // Load messages from local storage on component mount
-  // useEffect(() => {
-  //   if (courseName) {
-  //     const savedMessages = localStorage.getItem(`chatHistory_${courseName}`);
-  //     if (savedMessages) {
-  //       setMessages(JSON.parse(savedMessages));
-  //     }
-  //   }
-  // }, [courseName]);
+  // Effect to fetch paper questions if paperId exists
+  useEffect(() => {
+    if (paperId && courseName) {
+      setQuestionsLoading(true);
+      fetch(`http://localhost:8000/api/papers/${courseName}/${paperId}`)
+        .then(res => res.json())
+        .then((data: PaperQuestion) => {
+          if (data.questions) {
+            setPaperQuestions(data.questions);
+          } else {
+            setPaperQuestions(['Failed to load questions.']);
+          }
+        })
+        .catch(() => setPaperQuestions(['Error fetching questions.']))
+        .finally(() => setQuestionsLoading(false));
+    } else {
+      setQuestionsLoading(false);
+    }
+  }, [paperId, courseName]);
 
-  // // Save messages to local storage whenever they change
-  // useEffect(() => {
-  //   if (courseName && messages.length > 0) {
-  //     localStorage.setItem(`chatHistory_${courseName}`, JSON.stringify(messages));
-  //   }
-  // }, [messages, courseName]);
+  // Effect to scroll to the bottom of the chat
+  useEffect(() => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    }
+  }, [chatHistory]);
 
-  // useEffect(() => {
-  //   if (textareaRef.current) {
-  //     textareaRef.current.style.height = 'auto';
-  //     textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
-  //   }
-  // }, [input]);
+  // Auto-grow textarea height
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = textareaRef.current.scrollHeight + 'px';
+    }
+  }, [message]);
 
-  const handleSendMessage = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!input.trim()) return;
+  const handleSendMessage = async () => {
+    if (!message.trim() || loading) return;
 
-    const userMessage: Message = { text: input, sender: 'user' };
-    setMessages((prev) => [...prev, userMessage]);
-    setInput('');
-    setIsLoading(true);
+    const newHistory = [...chatHistory, { role: 'user' as const, content: message }];
+    setChatHistory(newHistory);
+    setMessage('');
+    setLoading(true);
 
     try {
       const response = await fetch('http://localhost:8000/api/answer', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ question: input, courseName: courseName }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ question: message, courseName }),
       });
-
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-
       const data = await response.json();
-      const aiMessage: Message = { text: data.answer, sender: 'ai' };
-      setMessages((prev) => [...prev, aiMessage]);
+      setChatHistory([...newHistory, { role: 'bot' as const, content: data.answer || 'Sorry, I encountered an error.' }]);
     } catch (error) {
-      console.error('Failed to get answer:', error);
-      const errorMessage: Message = { text: 'Sorry, something went wrong. Please try again.', sender: 'ai' };
-      setMessages((prev) => [...prev, errorMessage]);
+      setChatHistory([...newHistory, { role: 'bot' as const, content: 'Failed to connect to the server.' }]);
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
+  const formatCourseName = (name: string) => {
+    return name
+      ? name.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
+      : 'Chat';
+  };
+
   return (
-    <div className="bg-[#23272D] text-white h-screen flex flex-col font-open-sans">
-      <header className="flex items-center mb-4 p-4 px-8 md:px-16">
-        <Link href={`/courses/${courseName}`}>
-          <Image src="/images/logo.svg" alt="Study Partner Logo" width={50} height={50} />
-        </Link>
-        <h1 className="text-3xl font-bold ml-4">Study Partner AI</h1>
-      </header>
-
-      <main className="flex-1 overflow-y-auto px-8 md:px-60 space-y-6">
-        {messages.map((msg, index) => (
-          <div key={index} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
-            <div
-              className={`p-4 rounded-lg ${
-                msg.sender === 'user'
-                  ? 'bg-[#363A40] max-w-2xl'
-                  : 'bg-[#23272D] w-full'
-              }`}
-            >
-              <p style={{ whiteSpace: 'pre-wrap' }} className="text-lg">{msg.text}</p>
-            </div>
+    <div className="flex h-screen bg-[#23272D] text-white font-open-sans">
+      {/* Questions Side Panel */}
+      {paperId && (
+        <div className="w-[360px] bg-[#2C3138] p-4 flex flex-col" style={{ minWidth: 250, maxWidth: 400 }}>
+          <h2 className="text-xl font-bold mb-4 border-b border-gray-500 pb-2">Paper Questions</h2>
+          <div className="flex-grow overflow-y-auto">
+            {questionsLoading ? (
+              <p>Loading questions...</p>
+            ) : (
+              <ul className="space-y-3">
+                {paperQuestions?.map((q, index) => (
+                  <li key={index} className="text-sm text-gray-300 bg-[#40444A] p-2 rounded-md">
+                    {q}
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
-        ))}
-        {isLoading && (
-          <div className="flex justify-start">
-            <div className="bg-[#363A40] p-4 rounded-lg w-full">
-              <p className="text-lg">Thinking...</p>
-            </div>
-          </div>
-        )}
-      </main>
+        </div>
+      )}
 
-      <footer className="p-8 px-8 md:px-60">
-        <form onSubmit={handleSendMessage} className="relative flex items-center">
-          <textarea
-            ref={textareaRef}
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                handleSendMessage(e);
-              }
-            }}
-            placeholder="Ask a question about your notes..."
-            className="flex-1 p-3 pr-12 bg-[#363A40] rounded-lg focus:outline-none resize-none overflow-hidden text-lg"
-            rows={1}
-            style={{ maxHeight: '200px' }}
-            disabled={isLoading}
-          />
-          <button
-            type="submit"
-            className="absolute right-3 bottom-2.5 bg-blue-600 hover:bg-blue-700 text-white p-2 rounded-full transition-colors disabled:opacity-50"
-            disabled={isLoading}
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V13a1 1 0 102 0V9.414l1.293 1.293a1 1 0 001.414-1.414z" clipRule="evenodd" />
-            </svg>
-          </button>
-        </form>
-      </footer>
+      {/* Main Chat Window */}
+      <div className="flex flex-col flex-1">
+        <header className="flex items-center p-4 bg-[#2C3138] border-b border-gray-700">
+          <Link href={`/courses/${courseName}`}>
+              <Image src="/images/logo.svg" alt="Logo" width={50} height={50} />
+          </Link>
+          <h1 className="text-3xl font-bold ml-4">{formatCourseName(courseName)}</h1>
+        </header>
+
+        <main ref={chatContainerRef} className="flex-grow p-6 px-20 overflow-y-auto">
+          <div className="space-y-4">
+            {chatHistory.map((chat, index) => (
+              <div key={index} className={`flex ${chat.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                <div
+                  className={
+                    chat.role === 'user'
+                      ? 'max-w-lg p-3 rounded-lg bg-[#40444A] full-length break-words whitespace-pre-wrap'
+                      : 'w-full p-3 rounded-lg bg-[#23272D] break-words whitespace-pre-wrap'
+                  }
+                >
+                  {chat.role === 'bot'
+                    ? <ReactMarkdown>{chat.content}</ReactMarkdown>
+                    : chat.content
+                  }
+                </div>
+              </div>
+            ))}
+            {loading && (
+              <div className="flex justify-start">
+                <div className="w-full p-3 rounded-lg bg-[#23272D] break-words whitespace-pre-wrap">
+                  Thinking...
+                </div>
+              </div>
+            )}
+          </div>
+        </main>
+
+        <footer className="p-4 px-20 bg-[#23272D]  border-gray-700">
+          <div className="flex items-center bg-[#40444A] rounded-lg p-2">
+            <textarea
+              ref={textareaRef}
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSendMessage();
+                }
+              }}
+              placeholder="Ask your question..."
+              className="flex-grow bg-transparent focus:outline-none px-2 resize-none min-h-[40px] max-h-40"
+              disabled={loading}
+              rows={1}
+            />
+            <button onClick={handleSendMessage} disabled={loading} className="bg-blue-600 hover:bg-blue-700 rounded-md p-2 ml-2">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
+              </svg>
+            </button>
+          </div>
+        </footer>
+      </div>
     </div>
   );
 }
+

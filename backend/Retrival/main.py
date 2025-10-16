@@ -66,7 +66,7 @@ def answer_question(user_question, course_name):
     print("Retrieving relevant context from notes...")
     retrieved_results = collection.query(
         query_embeddings=[query_embedding],
-        n_results=5 # Retrieve the top 5 most relevant chunks[cite: 232].
+        n_results=15 # Retrieve the top 5 most relevant chunks[cite: 232].
     )
 
     # Extract the retrieved text chunks (documents) and their metadata.
@@ -82,7 +82,8 @@ def answer_question(user_question, course_name):
     prompt_template = """
     You are a meticulous and insightful AI research assistant. Your primary function is to help me understand and analyze my personal notes.
 
-    Your answers MUST be based exclusively on the provided CONTEXT. Do not use any external knowledge or make assumptions beyond what is written in the notes.
+    Your answers MUST be based on the provided CONTEXT. Use any external knowledge do not make assumptions beyond what is written in the notes.
+    Keep your answers long enough to be comprehensive but concise enough to be clear and to the point.
 
     Follow these rules strictly:
     1.  **Synthesize, Don't Just Find:** Do not just copy-paste snippets. Synthesize the relevant information from the context into a coherent and comprehensive answer.
@@ -107,7 +108,7 @@ def answer_question(user_question, course_name):
     print("Generating final answer with Gemini...")
     try:
         # Using 'gemini-2.0-flash' which is a more stable and specific model identifier.
-        model = genai.GenerativeModel('gemini-2.0-flash')
+        model = genai.GenerativeModel('gemini-2.5-flash')
         response = model.generate_content(final_prompt)
         generated_answer = response.text
     except Exception as e:
