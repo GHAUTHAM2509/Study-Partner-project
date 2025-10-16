@@ -5,7 +5,10 @@ import { useParams, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 
+
 import { marked } from 'marked';
+
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 
 interface PaperQuestion {
   questions: string[];
@@ -30,7 +33,7 @@ export default function ChatPage() {
   useEffect(() => {
     if (paperId && courseName) {
       setQuestionsLoading(true);
-      fetch(`https://study-partner-project-1furqqnls-ghautham2509s-projects.vercel.app/api/papers/${courseName}/${paperId}`)
+      fetch(`${BACKEND_URL}/api/papers/${courseName}/${paperId}`)
         .then(res => res.json())
         .then((data: PaperQuestion) => {
           if (data.questions) {
@@ -70,7 +73,7 @@ export default function ChatPage() {
     setLoading(true);
 
     try {
-      const response = await fetch('https://study-partner-project-1furqqnls-ghautham2509s-projects.vercel.app/api/answer', {
+      const response = await fetch(`${BACKEND_URL}/api/answer`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ question: message, courseName }),
