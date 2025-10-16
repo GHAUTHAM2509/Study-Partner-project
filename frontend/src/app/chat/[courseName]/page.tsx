@@ -4,7 +4,6 @@ import { useState, useEffect, useRef } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import ReactMarkdown from 'react-markdown';
 
 interface PaperQuestion {
   questions: string[];
@@ -132,7 +131,7 @@ export default function ChatPage() {
                   }
                 >
                   {chat.role === 'bot'
-                    ? <ReactMarkdown>{chat.content}</ReactMarkdown>
+                    ? chat.content
                     : chat.content
                   }
                 </div>
