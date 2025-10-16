@@ -33,9 +33,9 @@ export default function CoursePage() {
     setLoading(true);
     let url = '';
     if (activeTab === 'files') {
-      url = `http://localhost:8000/api/files/${courseName}`;
+      url = `https://study-partner-project-1furqqnls-ghautham2509s-projects.vercel.app/api/files/${courseName}`;
     } else {
-      url = `http://localhost:8000/api/papers/${courseName}`;
+      url = `https://study-partner-project-1furqqnls-ghautham2509s-projects.vercel.app/api/papers/${courseName}`;
     }
 
     fetch(url)
@@ -131,10 +131,10 @@ export default function CoursePage() {
                     <span className="ml-4">{file.name}</span>
                   </div>
                   <div className="flex gap-2">
-                    <a href={`http://localhost:8000/api/files/${courseName}/${file.name}`} target="_blank" rel="noopener noreferrer" className="flex items-center text-white font-bold py-2 px-3 rounded transition-colors text-sm">
+                    <a href={`https://study-partner-project-1furqqnls-ghautham2509s-projects.vercel.app/api/files/${courseName}/${file.name}`} target="_blank" rel="noopener noreferrer" className="flex items-center text-white font-bold py-2 px-3 rounded transition-colors text-sm">
                       <ViewIcon /> View
                     </a>
-                    <a href={`http://localhost:8000/api/files/${courseName}/${file.name}`} download className="flex items-center text-white font-bold py-2 px-3 rounded transition-colors text-sm">
+                    <a href={`https://study-partner-project-1furqqnls-ghautham2509s-projects.vercel.app/api/files/${courseName}/${file.name}`} download className="flex items-center text-white font-bold py-2 px-3 rounded transition-colors text-sm">
                       <DownloadIcon /> Download
                     </a>
                   </div>

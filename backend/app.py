@@ -13,7 +13,7 @@ sys.path.insert(0, project_root)
 from Retrival.main import answer_question
 
 app = Flask(__name__)
-CORS(app)  # Enable CORS for all routes
+CORS(app,origins=["https://study-partner-project-1furqqnls-ghautham2509s-projects.vercel.app"])  # Enable CORS for all routes
 
 DATA_DIRECTORY = os.path.join(project_root, 'Data')
 

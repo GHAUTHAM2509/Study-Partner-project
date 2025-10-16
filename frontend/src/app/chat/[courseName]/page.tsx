@@ -30,7 +30,7 @@ export default function ChatPage() {
   useEffect(() => {
     if (paperId && courseName) {
       setQuestionsLoading(true);
-      fetch(`http://localhost:8000/api/papers/${courseName}/${paperId}`)
+      fetch(`https://study-partner-project-1furqqnls-ghautham2509s-projects.vercel.app/api/papers/${courseName}/${paperId}`)
         .then(res => res.json())
         .then((data: PaperQuestion) => {
           if (data.questions) {
@@ -70,7 +70,7 @@ export default function ChatPage() {
     setLoading(true);
 
     try {
-      const response = await fetch('http://localhost:8000/api/answer', {
+      const response = await fetch('https://study-partner-project-1furqqnls-ghautham2509s-projects.vercel.app/api/answer', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ question: message, courseName }),
