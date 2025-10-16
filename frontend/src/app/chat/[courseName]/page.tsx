@@ -18,29 +18,29 @@ export default function ChatPage() {
   const [isLoading, setIsLoading] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // Load messages from local storage on component mount
-  useEffect(() => {
-    if (courseName) {
-      const savedMessages = localStorage.getItem(`chatHistory_${courseName}`);
-      if (savedMessages) {
-        setMessages(JSON.parse(savedMessages));
-      }
-    }
-  }, [courseName]);
+  // // Load messages from local storage on component mount
+  // useEffect(() => {
+  //   if (courseName) {
+  //     const savedMessages = localStorage.getItem(`chatHistory_${courseName}`);
+  //     if (savedMessages) {
+  //       setMessages(JSON.parse(savedMessages));
+  //     }
+  //   }
+  // }, [courseName]);
 
-  // Save messages to local storage whenever they change
-  useEffect(() => {
-    if (courseName && messages.length > 0) {
-      localStorage.setItem(`chatHistory_${courseName}`, JSON.stringify(messages));
-    }
-  }, [messages, courseName]);
+  // // Save messages to local storage whenever they change
+  // useEffect(() => {
+  //   if (courseName && messages.length > 0) {
+  //     localStorage.setItem(`chatHistory_${courseName}`, JSON.stringify(messages));
+  //   }
+  // }, [messages, courseName]);
 
-  useEffect(() => {
-    if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto';
-      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
-    }
-  }, [input]);
+  // useEffect(() => {
+  //   if (textareaRef.current) {
+  //     textareaRef.current.style.height = 'auto';
+  //     textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+  //   }
+  // }, [input]);
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -91,8 +91,8 @@ export default function ChatPage() {
             <div
               className={`p-4 rounded-lg ${
                 msg.sender === 'user'
-                  ? 'bg-blue-600 max-w-2xl'
-                  : 'bg-[#363A40] w-full'
+                  ? 'bg-[#363A40] max-w-2xl'
+                  : 'bg-[#23272D] w-full'
               }`}
             >
               <p style={{ whiteSpace: 'pre-wrap' }} className="text-lg">{msg.text}</p>

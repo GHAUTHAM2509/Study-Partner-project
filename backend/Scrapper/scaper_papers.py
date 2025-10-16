@@ -1,4 +1,5 @@
 #boiler plate for a python script for scapping a website
+import re
 import requests
 from bs4 import BeautifulSoup
 import logging
@@ -39,8 +40,8 @@ def scrape_website(url):
 
         soup = BeautifulSoup(driver.page_source, 'html.parser')
         # Save the output for debugging
-        with open("debug_output.html", "w", encoding="utf-8") as f:
-            f.write(soup.prettify())
+        # with open("debug_output.html", "w", encoding="utf-8") as f:
+        #     f.write(soup.prettify())
             
         driver.quit()
         return soup
@@ -65,13 +66,30 @@ def extract_paper_info(soup):
 
     for container in paper_containers:
         paper_info = {}
-        
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        }
         # Find the main link for the paper
         link_tag = container.find('a', href=True)
         if link_tag:
             base_url = "https://papers.codechefvit.com"
             paper_info['link'] = base_url + link_tag['href']
+            page_response = requests.get(paper_info['link'], headers=headers)
+            soup = BeautifulSoup(page_response.text, 'html.parser')
+            scripts = soup.find_all('script')
+            pdf_url = None
+            # Regex to find Google Storage URLs for PDFs
+            url_pattern = re.compile(r'https://storage\.googleapis\.com/.*?\.pdf')
 
+            for script in scripts:
+                if script.string:
+                    match = url_pattern.search(script.string)
+                    if match:
+                        pdf_url = match.group(0)
+                        logging.info(f"Found PDF URL: {pdf_url}")
+                        break
+            if pdf_url:
+                paper_info['pdf_link'] = pdf_url
         # Find the course code (e.g., BCSE303L)
         code_tag = container.find('div', class_='text-md font-play font-medium')
         if code_tag:
