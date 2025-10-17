@@ -119,5 +119,8 @@ def questions_from_papers(course_name, id):
 def index():
     return jsonify({"message": "Study Partner backend is running!"})
 
+
+application = app
+
 if __name__ == '__main__':
     app.run(debug=True, port=8000)
