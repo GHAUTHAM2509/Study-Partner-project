@@ -1,0 +1,50 @@
+# Core NLP and Embedding
+sentence-transformers
+yake
+spacy
+pytextrank
+
+# Environment and Database
+python-dotenv
+chromadb
+
+# Google Generative AI
+google-generativeai
+
+# Flask Backend
+Flask
+Flask-Cors
+
+# File Watching
+watchdog
+
+# Additional NLP models for spaCy (run: python -m spacy download en_core_web_sm)
+en_core_web_sm
+
+# For PDF and PPT processing (if needed)
+pdfminer.six
+python-pptx
+
+# For HTTP requests (if needed)
+requests
+
+# For JSON Web Token authentication (if needed)
+PyJWT
+
+# For CORS and security
+Flask-Cors
+
+# For logging and debugging
+loguru
+
+# For data manipulation
+pandas
+
+# For image processing (if needed)
+Pillow
+
+# For async tasks (if needed)
+aiohttp
+
+# For compatibility
+setuptools
