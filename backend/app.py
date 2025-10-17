@@ -9,7 +9,16 @@ from Scrapper.qp_analyser import process_pdf_with_docai, retrieve_questions_from
 # Add project root to Python path to resolve module imports
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__)))
 sys.path.insert(0, project_root)
+import spacy
 
+# Ensure model is available even in Vercel's ephemeral environment
+try:
+    nlp = spacy.load("en_core_web_sm")
+except OSError:
+    from spacy.cli import download
+    download("en_core_web_sm")
+    nlp = spacy.load("en_core_web_sm")
+    
 from Retrival.main import answer_question
 
 app = Flask(__name__)
