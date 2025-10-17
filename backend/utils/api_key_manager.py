@@ -33,8 +33,20 @@ def get_next_api_key():
         raise Exception("No API keys available in Redis list.")
 
 # Sample usage
+def delete_api_key(key_to_delete):
+    """
+    Deletes a specific API key from the Redis list.
+    """
+    r.lrem(REDIS_LIST_NAME, 0, key_to_delete)
+
 if __name__ == "__main__":
-    print("Current API keys order:", [k.decode() for k in r.lrange(REDIS_LIST_NAME, 0, -1)])
+    # print("Current API keys order:", [k.decode() for k in r.lrange(REDIS_LIST_NAME, 0, -1)])
     key = get_next_api_key()
-    print("Using API key:", key)
-    print("New API keys order:", [k.decode() for k in r.lrange(REDIS_LIST_NAME, 0, -1)])
+    # print("Using API key:", key)
+    # print("New API keys order:", [k.decode() for k in r.lrange(REDIS_LIST_NAME, 0, -1)])
+    # print(get_next_api_key())
+    # print(get_next_api_key())
+    # print(get_next_api_key())
+    # print(get_next_api_key())
+    # print(get_next_api_key())
+    # delete_api_key("GEMINI_API_KEY")
