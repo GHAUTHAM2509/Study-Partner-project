@@ -18,9 +18,6 @@ Flask-Cors
 # File Watching
 watchdog
 
-# Additional NLP models for spaCy (run: python -m spacy download en_core_web_sm)
-
-
 # For PDF and PPT processing (if needed)
 pdfminer.six
 python-pptx
@@ -48,3 +45,6 @@ aiohttp
 
 # For compatibility
 setuptools
+
+# For Web Scraping
+beautifulsoup4

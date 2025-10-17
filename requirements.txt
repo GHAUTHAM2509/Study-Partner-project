@@ -45,3 +45,6 @@ aiohttp
 
 # For compatibility
 setuptools
+
+# For Web Scraping
+beautifulsoup4
