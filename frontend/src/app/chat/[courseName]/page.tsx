@@ -24,7 +24,7 @@ export default function ChatPage() {
   const [loading, setLoading] = useState(false);
   const [paperQuestions, setPaperQuestions] = useState<string[] | null>(null);
   const [questionsLoading, setQuestionsLoading] = useState(true);
-
+  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -32,7 +32,7 @@ export default function ChatPage() {
   useEffect(() => {
     if (paperId && courseName) {
       setQuestionsLoading(true);
-      fetch(`http://127.0.0.1:8000/api/papers/${courseName}/${paperId}`)
+      fetch(`${backendUrl}/api/papers/${courseName}/${paperId}`)
         .then(res => res.json())
         .then((data: PaperQuestion) => {
           if (data.questions) {
@@ -72,7 +72,7 @@ export default function ChatPage() {
     setLoading(true);
 
     try {
-      const response = await fetch(`http://127.0.0.1:8000/api/answer`, {
+      const response = await fetch(`${backendUrl}/api/answer`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ question: message, courseName }),

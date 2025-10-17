@@ -26,16 +26,16 @@ export default function CoursePage() {
   const [papers, setPapers] = useState<Paper[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'files' | 'papers'>('files');
-
+  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
   useEffect(() => {
     if (!courseName) return;
 
     setLoading(true);
     let url = '';
     if (activeTab === 'files') {
-      url = `http://127.0.0.1:8000/api/files/${courseName}`;
+      url = `${backendUrl}/api/files/${courseName}`;
     } else {
-      url = `http://127.0.0.1:8000/api/papers/${courseName}`;
+      url = `${backendUrl}/api/papers/${courseName}`;
     }
 
     fetch(url)
