@@ -24,7 +24,8 @@ export default function ChatPage() {
   const [loading, setLoading] = useState(false);
   const [paperQuestions, setPaperQuestions] = useState<string[] | null>(null);
   const [questionsLoading, setQuestionsLoading] = useState(true);
-  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
+  const primaryBackendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
+  const backupBackendUrl = "http://192.168.64.4:8000";
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -32,21 +33,41 @@ export default function ChatPage() {
   useEffect(() => {
     if (paperId && courseName) {
       setQuestionsLoading(true);
-      fetch(`${backendUrl}/api/papers/${courseName}/${paperId}`)
-        .then(res => res.json())
-        .then((data: PaperQuestion) => {
-          if (data.questions) {
-            setPaperQuestions(data.questions);
-          } else {
-            setPaperQuestions(['Failed to load questions.']);
-          }
+      
+      const endpoint = `api/papers/${courseName}/${paperId}`;
+
+      const handleResponse = (data: PaperQuestion) => {
+        if (data.questions) {
+          setPaperQuestions(data.questions);
+        } else {
+          setPaperQuestions(['Failed to load questions.']);
+        }
+      };
+
+      const fetchData = (baseUrl: string | undefined) => {
+        if (!baseUrl) return Promise.reject(new Error("Base URL is not defined"));
+        return fetch(`${baseUrl}/${endpoint}`).then(res => {
+          if (!res.ok) throw new Error('Network response was not ok');
+          return res.json();
+        });
+      };
+
+      fetchData(primaryBackendUrl)
+        .then(handleResponse)
+        .catch(error => {
+          console.warn(`Primary backend failed for questions: ${error}. Trying backup...`);
+          fetchData(backupBackendUrl)
+            .then(handleResponse)
+            .catch(backupError => {
+              console.error(`Backup backend also failed for questions: ${backupError}`);
+              setPaperQuestions(['Error fetching questions.']);
+            });
         })
-        .catch(() => setPaperQuestions(['Error fetching questions.']))
         .finally(() => setQuestionsLoading(false));
     } else {
       setQuestionsLoading(false);
     }
-  }, [paperId, courseName]);
+  }, [paperId, courseName, primaryBackendUrl]);
 
   // Effect to scroll to the bottom of the chat
   useEffect(() => {
@@ -71,13 +92,28 @@ export default function ChatPage() {
     setMessage('');
     setLoading(true);
 
-    try {
-      const response = await fetch(`${backendUrl}/api/answer`, {
+    const fetchWithFallback = async (primaryUrl: string | undefined, backupUrl: string) => {
+      const body = JSON.stringify({ question: message, courseName });
+      const options = {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ question: message, courseName }),
-      });
-      const data = await response.json();
+        body,
+      };
+
+      try {
+        if (!primaryUrl) throw new Error("Primary URL is not defined");
+        const response = await fetch(`${primaryUrl}/api/answer`, options);
+        if (!response.ok) throw new Error('Primary fetch failed');
+        return response.json();
+      } catch (error) {
+        console.warn(`Primary backend failed for chat: ${error}. Trying backup...`);
+        const response = await fetch(`${backupUrl}/api/answer`, options);
+        return response.json();
+      }
+    };
+
+    try {
+      const data = await fetchWithFallback(primaryBackendUrl, backupBackendUrl);
       setChatHistory([...newHistory, { role: 'bot' as const, content: data.answer || 'Sorry, I encountered an error.' }]);
     } catch (error) {
       setChatHistory([...newHistory, { role: 'bot' as const, content: 'Failed to connect to the server.' }]);

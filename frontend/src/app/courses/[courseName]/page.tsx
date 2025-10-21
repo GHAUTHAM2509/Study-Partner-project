@@ -26,41 +26,60 @@ export default function CoursePage() {
   const [papers, setPapers] = useState<Paper[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'files' | 'papers'>('files');
-  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
+  const primaryBackendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
+  const backupBackendUrl = "http://192.168.64.4:8000"; // As per your request
+
   useEffect(() => {
     if (!courseName) return;
 
     setLoading(true);
-    let url = '';
-    if (activeTab === 'files') {
-      url = `${backendUrl}/api/files/${courseName}`;
-    } else {
-      url = `${backendUrl}/api/papers/${courseName}`;
-    }
 
-    fetch(url)
-      .then((res) => res.json())
-      .then((data) => {
-        if (activeTab === 'files') {
-          if (data.files) {
-            setFiles(data.files);
-          } else {
-            console.error("API did not return files:", data.error);
-            setFiles([]);
-          }
+    const endpoint = activeTab === 'files' ? `api/files/${courseName}` : `api/papers/${courseName}`;
+    
+    const handleResponse = (data: any) => {
+      if (activeTab === 'files') {
+        if (data.files) {
+          setFiles(data.files);
         } else {
-          if (data.papers) {
-            setPapers(data.papers);
-          } else {
-            console.error("API did not return papers:", data.error);
-            setPapers([]);
-          }
+          console.error("API did not return files:", data.error);
+          setFiles([]);
         }
+      } else {
+        if (data.papers) {
+          setPapers(data.papers);
+        } else {
+          console.error("API did not return papers:", data.error);
+          setPapers([]);
+        }
+      }
+    };
+
+    const fetchData = (baseUrl: string | undefined) => {
+      if (!baseUrl) {
+        return Promise.reject(new Error("Base URL is not defined"));
+      }
+      return fetch(`${baseUrl}/${endpoint}`).then(res => {
+        if (!res.ok) throw new Error('Network response was not ok');
+        return res.json();
+      });
+    };
+
+    fetchData(primaryBackendUrl)
+      .then(handleResponse)
+      .catch(error => {
+        console.warn(`Primary backend failed: ${error}. Trying backup...`);
+        return fetchData(backupBackendUrl)
+          .then(handleResponse)
+          .catch(backupError => {
+            console.error(`Backup backend also failed: ${backupError}`);
+            if (activeTab === 'files') setFiles([]);
+            if (activeTab === 'papers') setPapers([]);
+          });
       })
       .finally(() => {
         setLoading(false);
       });
-  }, [courseName, activeTab]);
+  }, [courseName, activeTab, primaryBackendUrl]);
 
   const getFileIcon = (type: string) => {
     if (type === 'pdf') {

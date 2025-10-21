@@ -3,6 +3,10 @@ sentence-transformers
 yake
 spacy
 pytextrank
+selenium
+webdriver-manager
+redis
+gunicorn
 
 # Environment and Database
 python-dotenv
