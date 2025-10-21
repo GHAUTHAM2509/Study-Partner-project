@@ -12,10 +12,10 @@ interface File {
 
 // Updated Paper interface to match your data structure
 interface Paper {
-  title: string;
+  id: string;
+  subject: string;
   link: string;
   pdf_link: string;
-  course_code: string;
   tags: string[];
 }
 
@@ -32,6 +32,13 @@ export default function CoursePage() {
   type FilesResponse = { files?: File[]; error?: string };
   type PapersResponse = { papers?: Paper[]; error?: string };
   type ApiResponse = FilesResponse | PapersResponse;
+
+  const courseDirMap: { [key: string]: string } = {
+    "database-systems": "database",
+    "operating-systems": "operating_systems",
+    "cloud-computing": "aws"
+  };
+  const actualDir = courseDirMap[courseName];
 
   useEffect(() => {
     if (!courseName) return;
@@ -98,6 +105,19 @@ export default function CoursePage() {
       .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
       .join(' ');
   };
+
+  const parseSubject = (subject: string) => {
+    // Add a guard clause to handle undefined or non-string subjects
+    if (typeof subject !== 'string') {
+      return { title: 'Unknown Paper', course_code: 'N/A' };
+    }
+    const match = subject.match(/^(.*)\[(.*)\]$/);
+    if (match) {
+      return { title: match[1].trim(), course_code: match[2].trim() };
+    }
+    return { title: subject, course_code: 'N/A' };
+  };
+
   // SVG Icon for AI (Sparkles)
   const AskaiIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -154,10 +174,10 @@ export default function CoursePage() {
                     <span className="ml-4">{file.name}</span>
                   </div>
                   <div className="flex gap-2">
-                    <a href={`http://127.0.0.1:8000/api/files/${courseName}/${file.name}`} target="_blank" rel="noopener noreferrer" className="flex items-center text-white font-bold py-2 px-3 rounded transition-colors text-sm">
+                    <a href={`https://storage.googleapis.com/study-partner-data/${actualDir}/${file.name}`} target="_blank" rel="noopener noreferrer" className="flex items-center text-white font-bold py-2 px-3 rounded transition-colors text-sm">
                       <ViewIcon /> View
                     </a>
-                    <a href={`http://127.0.0.1:8000/api/files/${courseName}/${file.name}`} download className="flex items-center text-white font-bold py-2 px-3 rounded transition-colors text-sm">
+                    <a href={`https://storage.googleapis.com/study-partner-data/${actualDir}/${file.name}`} download className="flex items-center text-white font-bold py-2 px-3 rounded transition-colors text-sm">
                       <DownloadIcon /> Download
                     </a>
                   </div>
@@ -166,10 +186,12 @@ export default function CoursePage() {
             </div>
           ) : (
             <div className="flex flex-col gap-3">
-              {papers.length > 0 ? papers.map((paper) => (
-                <div key={paper.link} className="bg-[#23272D] rounded-lg p-4 flex flex-col sm:flex-row justify-between hover:bg-[#2C3138] transition-colors">
+              {papers.length > 0 ? papers.map((paper) => {
+                const { title, course_code } = parseSubject(paper.subject);
+                return (
+                <div key={paper.id} className="bg-[#23272D] rounded-lg p-4 flex flex-col sm:flex-row justify-between hover:bg-[#2C3138] transition-colors">
                   <div className="flex-grow mb-3 sm:mb-0">
-                    <h3 className="font-semibold text-lg">{paper.title} <span className="text-sm text-gray-400 font-mono">({paper.course_code})</span></h3>
+                    <h3 className="font-semibold text-lg">{title} <span className="text-sm text-gray-400 font-mono">({course_code})</span></h3>
                     <div className="flex flex-wrap gap-2 mt-2">
                       {paper.tags.map(tag => (
                         <span key={tag} className="bg-gray-600 text-gray-200 text-xs font-semibold px-2.5 py-0.5 rounded-full">{tag}</span>
@@ -188,7 +210,7 @@ export default function CoursePage() {
                     </a>
                   </div>
                 </div>
-              )) : <p className="text-center">No papers found for this course.</p>}
+              )}) : <p className="text-center">No papers found for this course.</p>}
             </div>
           )}
         </div>

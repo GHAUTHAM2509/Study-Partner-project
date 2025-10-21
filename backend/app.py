@@ -3,10 +3,11 @@ from flask_cors import CORS
 import sys
 import os
 import urllib.parse
+import json
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 # Fallback to CPU if MPS has issues on Apple Silicon. Helps prevent crashes.
 os.environ["PYTORCH_ENABLE_MPS_FALLBACK"] = "0"
-from Scrapper.scaper_papers import scrape_website, extract_paper_info
+from Scrapper.fetch_papers import fetch_papers_from_api
 from Scrapper.qp_analyser import process_pdf_with_docai, retrieve_questions_from_paper
 # Add project root to Python path to resolve module imports
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__)))
@@ -16,10 +17,10 @@ import spacy
 # Ensure model is available even in Vercel's ephemeral environment
 try:
     nlp = spacy.load("en_core_web_sm")
-except OSError:
-    from spacy.cli import download
-    download("en_core_web_sm")
-    nlp = spacy.load("en_core_web_sm")
+except OSError as e:
+    # Fail fast if the critical model is missing
+    print(f"CRITICAL ERROR: Failed to load spaCy model: {e}", file=sys.stderr)
+    sys.exit(1)
     
 from Retrival.main import answer_question
 
@@ -41,19 +42,28 @@ def list_files(course_name):
     if not actual_dir:
         return jsonify({"error": "Course not found"}), 404
 
-    course_path = os.path.join(DATA_DIRECTORY, actual_dir)
+    json_file_path = os.path.join(DATA_DIRECTORY, actual_dir, 'file_path.json')
     
-    if not os.path.isdir(course_path):
-        return jsonify({"error": "Course directory not found"}), 404
+    if not os.path.exists(json_file_path):
+        return jsonify({"error": "File path data not found for course"}), 404
         
     try:
-        files = os.listdir(course_path)
+        with open(json_file_path, 'r') as f:
+            data = json.load(f)
+        
+        links = data.get('links', [])
         file_list = []
-        for file in files:
-            if file.endswith('.pdf'):
-                file_list.append({'name': file, 'type': 'pdf'})
-            elif file.endswith(('.ppt', '.pptx')):
-                file_list.append({'name': file, 'type': 'ppt'})
+        for link in links:
+            file_name = os.path.basename(link)
+            file_type = ''
+            if file_name.endswith('.pdf'):
+                file_type = 'pdf'
+            elif file_name.endswith(('.ppt', '.pptx')):
+                file_type = 'ppt'
+            
+            if file_type:
+                file_list.append({'name': file_name, 'type': file_type})
+
         return jsonify({'files': file_list})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -105,9 +115,7 @@ def list_papers(course_name):
     if not subject:
         return jsonify({"error": "Course not found for papers"}), 404
         
-    url = f"https://papers.codechefvit.com/catalogue?subject={urllib.parse.quote(subject)}"
-    soup = scrape_website(url)
-    papers = extract_paper_info(soup)
+    papers = fetch_papers_from_api(subject)
     return jsonify({'papers':papers})
 
 @app.route('/api/papers/<course_name>/<id>')
