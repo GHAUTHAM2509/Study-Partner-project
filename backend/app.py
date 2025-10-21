@@ -4,6 +4,8 @@ import sys
 import os
 import urllib.parse
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
+# Fallback to CPU if MPS has issues on Apple Silicon. Helps prevent crashes.
+os.environ["PYTORCH_ENABLE_MPS_FALLBACK"] = "0"
 from Scrapper.scaper_papers import scrape_website, extract_paper_info
 from Scrapper.qp_analyser import process_pdf_with_docai, retrieve_questions_from_paper
 # Add project root to Python path to resolve module imports
@@ -124,3 +126,6 @@ application = app
 
 if __name__ == '__main__':
     app.run(debug=True, port=8000)
+
+# To run this application with Gunicorn, use a command like:
+# gunicorn --bind 0.0.0.0:8000 app:application

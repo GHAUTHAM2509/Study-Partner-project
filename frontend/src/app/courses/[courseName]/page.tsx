@@ -28,6 +28,10 @@ export default function CoursePage() {
   const [activeTab, setActiveTab] = useState<'files' | 'papers'>('files');
   const primaryBackendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
   const backupBackendUrl = "http://192.168.64.4:8000"; // As per your request
+  // API response types
+  type FilesResponse = { files?: File[]; error?: string };
+  type PapersResponse = { papers?: Paper[]; error?: string };
+  type ApiResponse = FilesResponse | PapersResponse;
 
   useEffect(() => {
     if (!courseName) return;
@@ -36,19 +40,19 @@ export default function CoursePage() {
 
     const endpoint = activeTab === 'files' ? `api/files/${courseName}` : `api/papers/${courseName}`;
     
-    const handleResponse = (data: any) => {
+    const handleResponse = (data: ApiResponse) => {
       if (activeTab === 'files') {
-        if (data.files) {
+        if ('files' in data && data.files) {
           setFiles(data.files);
         } else {
-          console.error("API did not return files:", data.error);
+          console.error("API did not return files:", 'error' in data ? data.error : 'Unknown error');
           setFiles([]);
         }
       } else {
-        if (data.papers) {
+        if ('papers' in data && data.papers) {
           setPapers(data.papers);
         } else {
-          console.error("API did not return papers:", data.error);
+          console.error("API did not return papers:", 'error' in data ? data.error : 'Unknown error');
           setPapers([]);
         }
       }

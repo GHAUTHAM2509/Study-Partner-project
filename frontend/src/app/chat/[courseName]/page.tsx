@@ -116,6 +116,7 @@ export default function ChatPage() {
       const data = await fetchWithFallback(primaryBackendUrl, backupBackendUrl);
       setChatHistory([...newHistory, { role: 'bot' as const, content: data.answer || 'Sorry, I encountered an error.' }]);
     } catch (error) {
+      console.error(`Both backends failed for chat: ${error}`);
       setChatHistory([...newHistory, { role: 'bot' as const, content: 'Failed to connect to the server.' }]);
     } finally {
       setLoading(false);

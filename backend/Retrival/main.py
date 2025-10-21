@@ -18,7 +18,6 @@ load_dotenv()
 try:
     key = get_next_api_key()
     genai.configure(api_key=os.environ[key])
-    print(os.environ[key])
 except KeyError:
     print("Error: GEMINI_API_KEY environment variable not set.")
     exit()
