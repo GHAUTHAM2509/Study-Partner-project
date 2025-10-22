@@ -1,0 +1,48 @@
+**Overall Summary of the Backend:**
+
+The backend is a Flask application designed to support the "Study Partner" project. It serves as an API for a frontend, providing functionalities for retrieving educational content, answering questions using a Retrieval-Augmented Generation (RAG) system, and analyzing academic papers.
+
+The core of the backend is a RAG pipeline that processes PDF and PPTX documents, extracts text and images, chunks the content, generates embeddings, and stores them in a ChromaDB vector database. When a user asks a question, the backend retrieves relevant chunks from the database and uses a large language model (Gemini) to generate a comprehensive answer with citations.
+
+The backend also includes a web scraper to fetch past question papers and a document analysis module using Google's Document AI to extract questions from these papers.
+
+**File-by-File Summary:**
+
+*   **`app.py`**: The main Flask application file. It defines the API endpoints for:
+    *   Listing and serving files for different courses.
+    *   Answering questions using the RAG pipeline (`/api/answer`).
+    *   Fetching and analyzing question papers (`/api/papers/...`).
+
+*   **`requirements.txt`**: Lists all the Python dependencies required for the backend to run, including Flask, sentence-transformers, chromadb, google-generativeai, and others.
+
+*   **`Dockerfile.backend`**: A Dockerfile to containerize the backend application. It sets up a Python environment, installs dependencies, downloads the spaCy model, and runs the application using Gunicorn.
+
+*   **`Database/`**:
+    *   **`main.py`**: A script to process a single document and add its chunks to the ChromaDB collection.
+    *   **`process_pipeline.py`**: A script that iterates through a directory of text files, processes each one, and adds the resulting chunks to a ChromaDB collection.
+
+*   **`Embedding/`**:
+    *   **`Embedding.py`**: Contains a script to test the chunking of a document.
+    *   **`chunking.py`**: Defines the `create_chunks` function, which splits text files (from PDFs or PPTs) into smaller, page-based chunks.
+    *   **`keywordextraction.py`**: Implements keyword extraction from text chunks using YAKE and pytextrank.
+    *   **`process_pipline.py`**: The main pipeline for processing a single file. It orchestrates chunking, embedding creation, and keyword extraction.
+    *   **`sbert.py`**: Contains functions to generate sentence embeddings for text chunks using the `all-MiniLM-L6-v2` model.
+
+*   **`Preprocessing/`**:
+    *   **`Preprocessing.py`**: A batch processing script that can process all PDF and PPTX files in specified directories.
+    *   **`complexpdfanalysis.py`**: Uses Google Cloud Vision API to extract text from PDFs by converting pages to images, which is useful for scanned or complex documents.
+    *   **`imagedesc_test.py`**: A test script for image description and text extraction from images.
+    *   **`imagedescription.py`**: Contains functions to generate descriptions and extract text from images using Google Cloud Vision API.
+    *   **`texteractionpdf.py`**: Extracts text and images from PDF files using PyMuPDF and integrates with the image description module.
+    *   **`texteractionppt.py`**: Extracts text from PPTX files.
+
+*   **`Retrival/`**:
+    *   **`main.py`**: The core of the RAG system. The `answer_question` function takes a user's question, retrieves relevant context from ChromaDB, and uses the Gemini LLM to generate a synthesized answer with citations.
+
+*   **`Scrapper/`**:
+    *   **`fetch_papers.py`**: Fetches a list of academic papers from the CodeChef VIT Papers API.
+    *   **`qp_analyser.py`**: Uses Google Document AI to process a PDF paper and extract questions from it.
+    *   **`text_extract.py`**: A script to scrape a paper's HTML page to find the direct PDF URL and then extract text using Google Cloud Vision.
+
+*   **`utils/`**:
+    *   **`api_key_manager.py`**: Manages a pool of API keys using Redis to rotate through them, preventing rate-limiting issues.

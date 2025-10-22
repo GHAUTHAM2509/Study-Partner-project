@@ -1,0 +1,44 @@
+**Overall Summary of the Frontend:**
+
+The frontend of the "Study Partner" project is a Next.js application built with TypeScript and styled with Tailwind CSS. It provides the user interface for interacting with the backend services. The application is designed to be a single-page application (SPA) with different routes for navigating through courses, viewing resources, and interacting with an AI-powered chat.
+
+The main features of the frontend include:
+- A home page that displays a list of available courses.
+- A course-specific page that lists files (PDFs, PPTs) and past question papers related to the course.
+- A chat interface that allows users to ask questions about a specific course and receive answers from the backend's RAG system.
+- A feature to view questions from a selected past paper alongside the chat interface.
+
+The frontend is configured to communicate with a backend API, with a primary and a backup URL for resilience. It uses dynamic routing to handle different courses and resources.
+
+**File-by-File Summary:**
+
+*   **`package.json`**: Defines the project's metadata, scripts (`dev`, `build`, `start`, `lint`), and dependencies. Key dependencies include `next`, `react`, `react-dom`, `marked` (for rendering markdown from the chat bot), and development dependencies like `typescript`, `tailwindcss`, and `eslint`.
+
+*   **`next.config.ts`**: The configuration file for Next.js. It's used to set up environment variables, such as the backend URL (`NEXT_PUBLIC_BACKEND_URL`).
+
+*   **`src/app/layout.tsx`**: The root layout of the application. It sets up the basic HTML structure, including the `<html>` and `<body>` tags, and applies global fonts (Geist).
+
+*   **`src/app/page.tsx`**: The home page of the application. It displays a list of courses (Database Systems, Operating Systems, Cloud Computing) with background images, which link to the respective course pages.
+
+*   **`src/app/courses/[courseName]/page.tsx`**: A dynamic route that displays the resources for a specific course.
+    *   It fetches a list of files and past papers from the backend based on the `courseName` parameter.
+    *   It features a tabbed interface to switch between viewing files and papers.
+    *   It provides links to view, download, and "Ask AI" about the resources.
+
+*   **`src/app/chat/[courseName]/page.tsx`**: A dynamic route for the chat interface.
+    *   It allows users to send messages to the backend's RAG system and displays the conversation history.
+    *   If a `paperId` is present in the URL query parameters, it also fetches and displays the questions from that paper in a side panel.
+    *   The chat input is a textarea that auto-grows with content.
+    *   It uses the `marked` library to render the bot's markdown-formatted responses.
+
+*   **`src/app/resources.tsx`**: An empty file, likely a placeholder for a future feature.
+
+*   **`src/types/react-file-viewer.d.ts`**: An empty TypeScript declaration file, which might have been intended for type definitions for a file viewer component.
+
+*   **`eslint.config.mjs`**: The configuration file for ESLint, a code linter, to enforce code quality and style.
+
+*   **`postcss.config.mjs`**: The configuration file for PostCSS, used here to integrate Tailwind CSS.
+
+*   **`tsconfig.json`**: The TypeScript configuration file. It specifies the compiler options for the project, such as the target JavaScript version, module system, and path aliases.
+
+*   **`README.md`**: The standard README file for a Next.js project, with instructions on how to get started, learn more, and deploy the application.

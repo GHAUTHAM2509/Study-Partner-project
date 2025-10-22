@@ -161,7 +161,7 @@ export default function ChatPage() {
         </header>
 
         <main ref={chatContainerRef} className="flex-grow p-6 px-20 overflow-y-auto">
-          <div className="space-y-4">
+          <div className="space-y-2">
             {chatHistory.map((chat, index) => (
               <div key={index} className={`flex ${chat.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                 <div
@@ -172,7 +172,7 @@ export default function ChatPage() {
                   }
                 >
                   {chat.role === 'bot'
-                    ? <div dangerouslySetInnerHTML={{ __html: marked.parse(chat.content) }} />
+                    ? <div className="prose prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: marked.parse(chat.content) }} />
                     : chat.content
                   }
                 </div>
