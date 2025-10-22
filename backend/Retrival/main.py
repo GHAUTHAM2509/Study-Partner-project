@@ -56,9 +56,29 @@ def answer_question(user_question, course_name):
 
     collection = client.get_collection(name=collection_name)
 
-    # Step 1: Embed the user's question[cite: 51].
-    # The question is converted into a vector using the same model as the documents.
-    query_embedding = embedding_model.encode(user_question).tolist()
+    # New Step: Use Gemini to extract key topics from the user question for better retrieval.
+    print("Analyzing user question to extract key topics...")
+    topic_extraction_prompt = f"""
+    Analyze the following user question and extract the top 3-5 most important keywords or topics for a database search.
+    The output should be a concise string of these topics, separated by commas.
+    Do not add any explanation or introductory text. Just provide the keywords.
+
+    USER QUESTION: "{user_question}"
+
+    KEYWORDS:
+    """
+    try:
+        model = genai.GenerativeModel('gemini-2.5-flash')
+        response = model.generate_content(topic_extraction_prompt)
+        search_query = response.text.strip()
+        print(f"Using extracted topics for search: '{search_query}'")
+    except Exception as e:
+        print(f"Could not extract topics, falling back to original question. Error: {e}")
+        search_query = user_question
+
+    # Step 1: Embed the search query.
+    # The query (either original or extracted topics) is converted into a vector.
+    query_embedding = embedding_model.encode(search_query).tolist()
 
     # Step 2: Query the vector database to retrieve relevant context[cite: 51].
     # The database performs a similarity search to find the most contextually relevant text chunks[cite: 47].
